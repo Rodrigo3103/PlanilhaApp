@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>GymPro Legendary</title>
+    <title>GymPro Absolute - Ultimate Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       :root {
@@ -18,7 +18,7 @@
         --gray: #666;
       }
       body {
-        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        font-family: "Inter", system-ui, sans-serif;
         background: var(--bg);
         color: #fff;
         margin: 0;
@@ -27,7 +27,7 @@
         overflow-x: hidden;
       }
 
-      /* Stats */
+      /* Stats & Header */
       .header {
         display: flex;
         justify-content: space-between;
@@ -81,6 +81,7 @@
         border-radius: 12px;
         font-weight: 800;
         cursor: pointer;
+        border: none;
       }
       .filter-btn.active {
         background: var(--p);
@@ -144,7 +145,6 @@
         outline: none;
       }
 
-      /* Botões de Incremento */
       .inc-btn {
         position: absolute;
         top: 0;
@@ -156,7 +156,7 @@
         color: var(--p);
         font-size: 1.2rem;
         cursor: pointer;
-        opacity: 0.5;
+        opacity: 0.4;
       }
       .inc-minus {
         left: 0;
@@ -186,11 +186,10 @@
       .dot.active {
         background: var(--p);
         color: #000;
-        box-shadow: 0 4px 12px rgba(209, 250, 30, 0.3);
         border-color: var(--p);
       }
 
-      /* Panels */
+      /* Painéis */
       .panel {
         position: fixed;
         top: 0;
@@ -216,6 +215,25 @@
         text-transform: uppercase;
       }
 
+      /* Área de Sugestões */
+      .feedback-item {
+        background: #111;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #222;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        color: #eee;
+        position: relative;
+      }
+      .del-feed {
+        color: var(--danger);
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        font-weight: bold;
+      }
+
       .nav {
         position: fixed;
         bottom: 0;
@@ -235,6 +253,7 @@
         color: #555;
         font-weight: bold;
         cursor: pointer;
+        text-transform: uppercase;
       }
       .nav-btn.active {
         color: var(--p);
@@ -248,19 +267,19 @@
           <small>SESSÃO</small><b id="session-clock">00:00</b>
         </div>
         <div class="stat-card">
-          <small>CARGA SESSÃO</small><b id="total-vol">0</b>
+          <small>CARGA TOTAL</small><b id="total-vol">0</b>
         </div>
       </div>
 
       <div class="filter-bar">
         <button class="filter-btn active" onclick="setFilter('A', this)">
-          FICHA A
+          TREINO A
         </button>
         <button class="filter-btn" onclick="setFilter('B', this)">
-          FICHA B
+          TREINO B
         </button>
         <button class="filter-btn" onclick="setFilter('C', this)">
-          FICHA C
+          TREINO C
         </button>
       </div>
 
@@ -276,12 +295,12 @@
     </div>
 
     <div id="edit-panel" class="panel">
-      <h2 style="color: var(--p)">EDITAR EXERCÍCIO</h2>
+      <h2 style="color: var(--p)">CONFIGURAR</h2>
       <input type="hidden" id="edit-id" />
       <input
         type="text"
         id="edit-name"
-        placeholder="Nome"
+        placeholder="Nome do Exercício"
         style="
           width: 100%;
           padding: 15px;
@@ -343,28 +362,59 @@
         </div>
       </div>
 
-      <button class="btn-action" onclick="saveExerciseData()">
-        SALVAR ALTERAÇÕES
-      </button>
+      <button class="btn-action" onclick="saveExerciseData()">SALVAR</button>
       <button
         class="btn-action"
         style="background: #222; color: #fff"
         onclick="closeAllPanels()"
       >
-        CANCELAR
+        VOLTAR
       </button>
     </div>
 
     <div id="history-panel" class="panel">
-      <h2 style="color: var(--p)">PROGRESSÃO</h2>
-      <canvas id="mainChart" style="margin-bottom: 20px"></canvas>
+      <h2 style="color: var(--p)">ANÁLISE</h2>
+      <canvas id="mainChart" style="margin-bottom: 25px"></canvas>
+
+      <h3 style="color: var(--p)">SUGESTÕES DE MELHORIA</h3>
+      <div style="display: flex; gap: 10px; margin-bottom: 15px">
+        <input
+          type="text"
+          id="feed-input"
+          placeholder="O que melhorar?"
+          style="
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: #111;
+            color: #fff;
+          "
+        />
+        <button
+          onclick="addFeedback()"
+          style="
+            background: var(--p);
+            border: none;
+            border-radius: 10px;
+            padding: 0 15px;
+            font-weight: bold;
+          "
+        >
+          +
+        </button>
+      </div>
+      <div id="feedback-list"></div>
+
+      <h3 style="color: var(--p); margin-top: 25px">HISTÓRICO RECENTE</h3>
       <div id="history-container"></div>
+
       <button
         class="btn-action"
         style="background: #222; color: #fff"
         onclick="exportBackup()"
       >
-        BACKUP (BASE64)
+        EXPORTAR BACKUP
       </button>
       <button
         class="btn-action"
@@ -428,8 +478,9 @@
       let currentFilter = "A",
         isMassMode = false,
         selectedIds = [];
-      let db = JSON.parse(localStorage.getItem("gym_v11_db")) || [];
-      let history = JSON.parse(localStorage.getItem("gym_v11_history")) || [];
+      let db = JSON.parse(localStorage.getItem("gym_v12_db")) || [];
+      let history = JSON.parse(localStorage.getItem("gym_v12_history")) || [];
+      let feedback = JSON.parse(localStorage.getItem("gym_v12_feedback")) || [];
 
       function startSessionTimer() {
         sessionInterval = setInterval(() => {
@@ -438,7 +489,7 @@
             s = sessionSecs % 60;
           document.getElementById("session-clock").innerText = `${m
             .toString()
-            .padStart(2, "0")}:${(ds = s.toString().padStart(2, "0"))}`;
+            .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
         }, 1000);
       }
 
@@ -447,8 +498,7 @@
         const filtered = db.filter((ex) => ex.tag === currentFilter);
         list.innerHTML = filtered
           .map((ex) => {
-            // Buscar último log deste exercício
-            let lastLogStr = "Primeira vez hoje";
+            let lastLogStr = "Sem registros anteriores";
             for (let h of history) {
               let found = h.exercises?.find((e) => e.name === ex.name);
               if (found) {
@@ -463,7 +513,7 @@
                 }" onclick="handleCardClick(${ex.id})">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span class="muscle-tag">${ex.muscle}</span>
-                        <span style="color:var(--gray); font-size:0.6rem; font-weight:bold;">1RM: ${Math.round(
+                        <span style="color:var(--gray); font-size:0.6rem; font-weight:900;">1RM: ${Math.round(
                           ex.weight / (1.0278 - 0.0278 * ex.reps)
                         )}kg</span>
                     </div>
@@ -472,13 +522,15 @@
                     
                     <div class="grid-inputs">
                         <div class="input-box">
-                            <label>KG</label>
+                            <label>CARGA (KG)</label>
                             <div class="inc-btn inc-minus" onclick="adj(${
                               ex.id
                             },'weight',-2)">-</div>
-                            <input type="number" id="w-${ex.id}" value="${
-              ex.weight
-            }" onchange="updateVal(${ex.id},'weight',this.value)">
+                            <input type="number" value="${
+                              ex.weight
+                            }" onchange="updateVal(${
+              ex.id
+            },'weight',this.value)">
                             <div class="inc-btn inc-plus" onclick="adj(${
                               ex.id
                             },'weight',2)">+</div>
@@ -488,14 +540,14 @@
                             <div class="inc-btn inc-minus" onclick="adj(${
                               ex.id
                             },'reps',-1)">-</div>
-                            <input type="number" id="r-${ex.id}" value="${
-              ex.reps
-            }" onchange="updateVal(${ex.id},'reps',this.value)">
+                            <input type="number" value="${
+                              ex.reps
+                            }" onchange="updateVal(${ex.id},'reps',this.value)">
                             <div class="inc-btn inc-plus" onclick="adj(${
                               ex.id
                             },'reps',1)">+</div>
                         </div>
-                        <div class="input-box"><label>DESC.</label><span style="font-weight:900; line-height:2">${
+                        <div class="input-box"><label>REST</label><span style="font-weight:900; line-height:2">${
                           ex.rest
                         }</span></div>
                     </div>
@@ -513,7 +565,7 @@
                     </div>
                     ${
                       !isMassMode
-                        ? `<span style="position:absolute; top:18px; right:18px; color:#444" onclick="openEditMode(event, ${ex.id})">⚙️</span>`
+                        ? `<span style="position:absolute; top:18px; right:18px; color:#333" onclick="openEditMode(event, ${ex.id})">⚙️</span>`
                         : ""
                     }
                 </div>`;
@@ -522,23 +574,21 @@
         calculateTotals();
       }
 
-      function adj(id, field, val) {
+      function adj(id, f, v) {
         const ex = db.find((e) => e.id === id);
-        ex[field] = Math.max(0, parseFloat(ex[field]) + val);
+        ex[f] = Math.max(0, parseFloat(ex[f]) + v);
         saveDB();
         render();
       }
-
       function completeSet(el, id) {
         el.classList.toggle("active");
         if (el.classList.contains("active"))
           startRestTimer(db.find((e) => e.id === id).rest);
         calculateTotals();
       }
-
-      function startRestTimer(timeStr) {
+      function startRestTimer(ts) {
         clearInterval(restInterval);
-        let [m, s] = timeStr.split(":").map(Number);
+        let [m, s] = ts.split(":").map(Number);
         let total = m * 60 + s;
         restInterval = setInterval(() => {
           total--;
@@ -554,7 +604,6 @@
           }
         }, 1000);
       }
-
       function beep() {
         try {
           const a = new AudioContext();
@@ -568,84 +617,48 @@
         clearInterval(restInterval);
         document.getElementById("clock").innerText = "00:00";
       }
-
       function calculateTotals() {
-        let vol = 0;
+        let v = 0;
         db.forEach((ex) => {
           const a = document.querySelectorAll(
             `#card-${ex.id} .dot.active`
           ).length;
-          vol += ex.weight * ex.reps * a;
+          v += ex.weight * ex.reps * a;
         });
-        document.getElementById("total-vol").innerText = vol + "kg";
+        document.getElementById("total-vol").innerText = v + "kg";
       }
 
-      function openEditMode(e, id) {
-        e.stopPropagation();
-        const ex = db.find((x) => x.id === id);
-        document.getElementById("edit-id").value = ex.id;
-        document.getElementById("edit-name").value = ex.name;
-        document.getElementById("edit-muscle").value = ex.muscle;
-        document.getElementById("edit-tag").value = ex.tag;
-        document.getElementById("edit-sets").value = ex.sets;
-        document.getElementById("edit-rest").value = ex.rest;
-        togglePanel("edit-panel");
+      function addFeedback() {
+        const input = document.getElementById("feed-input");
+        if (!input.value) return;
+        feedback.unshift({ id: Date.now(), text: input.value });
+        input.value = "";
+        localStorage.setItem("gym_v12_feedback", JSON.stringify(feedback));
+        renderFeedback();
       }
-
-      function saveExerciseData() {
-        const id = document.getElementById("edit-id").value;
-        const data = {
-          name: document.getElementById("edit-name").value,
-          muscle: document.getElementById("edit-muscle").value,
-          tag: document.getElementById("edit-tag").value,
-          sets: parseInt(document.getElementById("edit-sets").value),
-          rest: document.getElementById("edit-rest").value,
-        };
-        if (id) {
-          const idx = db.findIndex((e) => e.id == id);
-          db[idx] = { ...db[idx], ...data };
-        } else {
-          db.push({ id: Date.now(), ...data, weight: 0, reps: 0 });
-        }
-        saveDB();
-        closeAllPanels();
+      function renderFeedback() {
+        document.getElementById("feedback-list").innerHTML = feedback
+          .map(
+            (f) =>
+              `<div class="feedback-item">${f.text} <span class="del-feed" onclick="delFeed(${f.id})">×</span></div>`
+          )
+          .join("");
       }
-
-      function finishSession() {
-        const vol = parseInt(document.getElementById("total-vol").innerText);
-        if (vol === 0) return alert("Marque as séries!");
-        history.unshift({
-          date: new Date().toLocaleDateString("pt-BR"),
-          volume: vol,
-          type: currentFilter,
-          exercises: db
-            .map((ex) => {
-              const a = document.querySelectorAll(
-                `#card-${ex.id} .dot.active`
-              ).length;
-              return a > 0
-                ? {
-                    name: ex.name,
-                    weight: ex.weight,
-                    reps: ex.reps,
-                    setsDone: a,
-                  }
-                : null;
-            })
-            .filter((x) => x),
-        });
-        localStorage.setItem("gym_v11_history", JSON.stringify(history));
-        location.reload();
+      function delFeed(id) {
+        feedback = feedback.filter((f) => f.id !== id);
+        localStorage.setItem("gym_v12_feedback", JSON.stringify(feedback));
+        renderFeedback();
       }
 
       function openHistory() {
         togglePanel("history-panel");
+        renderFeedback();
         const container = document.getElementById("history-container");
         container.innerHTML = history
-          .slice(0, 8)
+          .slice(0, 5)
           .map(
             (h) =>
-              `<div style="background:#111; padding:12px; border-radius:15px; margin-bottom:10px; border:1px solid #222;"><b>${h.date}</b> - ${h.volume}kg</div>`
+              `<div style="background:#111; padding:12px; border-radius:15px; margin-bottom:8px; border:1px solid #222;"><b>${h.date}</b> - ${h.volume}kg</div>`
           )
           .join("");
         const ctx = document.getElementById("mainChart").getContext("2d");
@@ -667,19 +680,69 @@
           },
           options: {
             plugins: { legend: { display: false } },
-            scales: { y: { display: false } },
+            scales: { y: { display: false }, x: { ticks: { color: "#555" } } },
           },
         });
       }
 
+      // Funções Base
+      function openEditMode(e, id) {
+        e.stopPropagation();
+        const ex = db.find((x) => x.id === id);
+        document.getElementById("edit-id").value = ex.id;
+        document.getElementById("edit-name").value = ex.name;
+        document.getElementById("edit-muscle").value = ex.muscle;
+        document.getElementById("edit-tag").value = ex.tag;
+        document.getElementById("edit-sets").value = ex.sets;
+        document.getElementById("edit-rest").value = ex.rest;
+        togglePanel("edit-panel");
+      }
+      function saveExerciseData() {
+        const id = document.getElementById("edit-id").value;
+        const data = {
+          name: document.getElementById("edit-name").value,
+          muscle: document.getElementById("edit-muscle").value,
+          tag: document.getElementById("edit-tag").value,
+          sets: parseInt(document.getElementById("edit-sets").value),
+          rest: document.getElementById("edit-rest").value,
+        };
+        if (id) {
+          const idx = db.findIndex((e) => e.id == id);
+          db[idx] = { ...db[idx], ...data };
+        } else {
+          db.push({ id: Date.now(), ...data, weight: 0, reps: 0 });
+        }
+        saveDB();
+        closeAllPanels();
+      }
+      function finishSession() {
+        const v = parseInt(document.getElementById("total-vol").innerText);
+        if (v === 0) return alert("Marque as séries!");
+        history.unshift({
+          date: new Date().toLocaleDateString("pt-BR"),
+          volume: v,
+          type: currentFilter,
+          exercises: db
+            .map((ex) => {
+              const a = document.querySelectorAll(
+                `#card-${ex.id} .dot.active`
+              ).length;
+              return a > 0
+                ? { name: ex.name, weight: ex.weight, reps: ex.reps }
+                : null;
+            })
+            .filter((x) => x),
+        });
+        localStorage.setItem("gym_v12_history", JSON.stringify(history));
+        location.reload();
+      }
       function updateVal(id, f, v) {
-        const ex = db.find((e) => e.id === id);
-        ex[f] = parseFloat(v) || 0;
+        db.find((e) => e.id === id)[f] = parseFloat(v) || 0;
         saveDB();
         calculateTotals();
       }
       function saveDB() {
-        localStorage.setItem("gym_v11_db", JSON.stringify(db));
+        localStorage.setItem("gym_v12_db", JSON.stringify(db));
       }
       function togglePanel(id) {
         document
@@ -722,9 +785,11 @@
         }
       }
       function deleteSelected() {
-        db = db.filter((ex) => !selectedIds.includes(ex.id));
-        saveDB();
-        toggleMassMode(false);
+        if (confirm("Apagar?")) {
+          db = db.filter((ex) => !selectedIds.includes(ex.id));
+          saveDB();
+          toggleMassMode(false);
+        }
       }
       function openAddMode() {
         document.getElementById("edit-id").value = "";
@@ -734,7 +799,7 @@
         togglePanel("edit-panel");
       }
       function exportBackup() {
-        prompt("Código Backup:", btoa(JSON.stringify({ db, history })));
+        prompt("Backup Code:", btoa(JSON.stringify({ db, history, feedback })));
       }
 
       startSessionTimer();
