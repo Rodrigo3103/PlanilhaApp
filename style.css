@@ -1,0 +1,60 @@
+:root {
+    --primary: #d1fa1e;
+    --bg: #000;
+    --card: #111;
+    --text: #fff;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding-bottom: 90px;
+}
+
+.app-header {
+    background: var(--card);
+    padding: 30px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #222;
+}
+
+#timer-clock { font-size: 3rem; margin: 0; color: var(--primary); font-weight: 900; }
+.xp-bar { width: 80px; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+#xp-fill { height: 100%; background: var(--primary); width: 40%; transition: 0.5s; }
+
+.group-selector { display: flex; overflow-x: auto; padding: 15px; gap: 10px; }
+.group-selector button {
+    background: #1a1a1a; border: none; color: #666; padding: 10px 25px;
+    border-radius: 12px; font-weight: bold; white-space: nowrap;
+}
+.group-selector button.active { background: var(--primary); color: #000; }
+
+.exercise-card {
+    background: var(--card);
+    margin: 15px;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid #222;
+}
+
+.card-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+.info-box { background: #1a1a1a; padding: 10px; border-radius: 10px; text-align: center; }
+.info-box small { display: block; font-size: 0.6rem; color: #555; text-transform: uppercase; }
+.info-box span { font-size: 1.1rem; font-weight: bold; }
+
+.btn-complete {
+    width: 100%; background: #fff; color: #000; border: none;
+    padding: 15px; border-radius: 12px; font-weight: bold;
+}
+
+.fab-add {
+    position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px;
+    background: var(--primary); border-radius: 20px; border: none; font-size: 2rem;
+}
+/* Modais e utilitários */
+.row { display: flex; gap: 10px; margin-bottom: 10px; }
+input, select { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 10px; }
